@@ -1,0 +1,8 @@
+# Ignore Mac system files
+.DS_store
+
+# Ignore all zip files
+*.zip
+
+# Ignore tmp folder
+/tmp

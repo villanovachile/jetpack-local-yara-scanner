@@ -1,0 +1,8 @@
+#!/bin/bash
+
+source ~/bin/scan_env/bin/activate
+
+python3 ~/bin/scan.py "$@"
+
+deactivate
+
