@@ -4,6 +4,7 @@ import os
 import subprocess
 import yara
 import argparse
+import tempfile
 from tqdm import tqdm
 from pathlib import Path
 
@@ -15,11 +16,10 @@ RULES_DIRS = [
     os.path.join(BASE_DIR, 'signatures/YARA/raw/')
 ]
 
-COMBINED_RULES_FILE = os.path.join(BASE_DIR, 'combined_yara_rules.yara')
-COMPILED_RULES_FILE = os.path.join(BASE_DIR, 'combined_yara_rules_compiled.yarac')
+COMBINED_RULES_FILE = os.path.join(tempfile.gettempdir(), 'combined_yara_rules.yara')
+COMPILED_RULES_FILE = os.path.join(tempfile.gettempdir(), 'combined_yara_rules_compiled.yarac')
 
 LOG_FILE = os.path.expanduser('malware_found.log')
-
 
 def combine_and_compile_rules():
     with open(COMBINED_RULES_FILE, 'w') as outfile:
@@ -99,6 +99,12 @@ def main():
         files = [f for f in scan_dir.rglob('*') if f.is_file()]
         print(f"No flags provided. Scanning current working directory: {scan_dir}")
         scan_files(rules, files, scan_dir)
+
+    if os.path.exists(COMBINED_RULES_FILE):
+        os.remove(COMBINED_RULES_FILE)
+
+    if os.path.exists(COMPILED_RULES_FILE):
+        os.remove(COMPILED_RULES_FILE)
 
     print(f"\nScan complete. Results saved to {LOG_FILE}")
     os.system(f"open -a Console {LOG_FILE}")
