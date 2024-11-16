@@ -3,16 +3,23 @@ A Python utility for malware detection using YARA rules. It leverages the YARA P
 
 ## Requirements
 - Python3
+- Yara C Library
 
 ## Installation
 
-1. Add ~/bin/ to `PATH`:
+#### 1. Add ~/bin/ to `PATH`:
 ```
 echo 'export PATH="$HOME/bin:$PATH"' >> ~/.bashrc  # Or ~/.zshrc if using Zsh
 source ~/.bashrc  # Or ~/.zshrc
 ```
 
-2. Open Terminal and run:
+#### 2. Install Yara C Library
+
+```
+brew install yara
+```
+
+#### 2. Open Terminal and run:
 
 ```
 curl -fsSL https://raw.githubusercontent.com/villanovachile/jetpack-local-yara-scanner/main/install_scan.sh -o /tmp/install_scan.sh && bash /tmp/install_scan.sh && rm /tmp/install_scan.sh
@@ -44,5 +51,5 @@ Total PHP files: 11037
 Total HTML/JS files: 3912
 Total other files: 235
 Total files to scan: 15184
-Scanning files:  16%|████████████▊                                                                 | 2489/15184 [00:07<00:43, 289.17it/s]
+Scanning files:  16%|████████████▊            | 2489/15184 [00:07<00:43, 289.17it/s]
 ```
