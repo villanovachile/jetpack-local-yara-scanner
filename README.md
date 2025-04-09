@@ -30,14 +30,23 @@ curl -fsSL https://raw.githubusercontent.com/villanovachile/jetpack-local-yara-s
 
 Run the script using the `scan` command. The script supports scanning directories, specific files, or defaults to the current working directory.
 
-1. **Scan the Current Working Directory (Default)**: `scan`
+### Basic Examples
+**Scan the Current Working Directory (Default):** `scan`
 
-2. **Scan a Specific Directory**: `scan -d /path/to/directory`
+**Scan a Specific Directory:** `scan -d /path/to/directory`
 
-3. **Scan Specific Files**: `scan -f file1.php file2.html`
+**Scan Specific Files:** `scan -f file1.php file2.html`
 
-#### Note:
-This scans all files in the current working directory or the specified directory/file. To ensure accurate results, limit the scan to binary files.
+### Optional Flags
+
+**Include Exploratory Rules:** `scan -d /path/to/directory -e`
+
+**Show Matched String Patterns (string ID and value):** `scan -f suspicious.php -s`
+
+**Combine Exploratory Rules and Matched Strings:** `scan -e -s`
+
+
+
 
 
 Example Output:
@@ -53,3 +62,14 @@ Total other files: 235
 Total files to scan: 15184
 Scanning files:  16%|████████████▊            | 2489/15184 [00:07<00:43, 289.17it/s]
 ```
+
+## Changelog
+
+#### 1.01 -
+- Limits scans to files that are 10MB or less
+- Calculates memory usage
+- Adds --exploratory argument to include signatures that are exploratory. These signatures will be denoted by a * . By default, only production signature matches will be output.
+- Adds a `--show-strings` argument to show the matched strings for each signature.
+
+#### 1.00 - 
+- Initial release.
