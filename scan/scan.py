@@ -2,6 +2,7 @@
 # Title: Jetpack Local YARA Scanner
 # Author: Daniel Rodriguez (@villanovachile)
 # Version: 1.01
+VERSION = "1.01"
 
 import os
 import subprocess
@@ -9,6 +10,7 @@ import yara
 import argparse
 import tempfile
 import psutil
+import sys
 from tqdm import tqdm
 from pathlib import Path
 from collections import defaultdict
@@ -36,16 +38,39 @@ def combine_and_compile_rules():
     """Combine YARA rules and compile them."""
     process = psutil.Process(os.getpid())
     print(f"Memory Usage Before Compiling Rules: {process.memory_info().rss / 1024 ** 2:.2f} MB")
+
     with open(COMBINED_RULES_FILE, 'w') as outfile:
         outfile.write("// Combined YARA Rules\n")
+
+        total_rules = 0
         for rules_dir in RULES_DIRS:
-            rule_files = list(Path(rules_dir).glob("*.yara"))
+            if not os.path.isdir(os.path.expanduser(rules_dir)):
+                print(f"Warning: rules directory not found: {rules_dir}")
+                continue
+
+            rule_files = list(Path(os.path.expanduser(rules_dir)).glob("*.yara"))
+            if not rule_files:
+                print(f"Warning: No .yara files found in {rules_dir}")
+                continue
+
             for rule_file in rule_files:
                 with open(rule_file, 'r') as infile:
                     outfile.write(infile.read() + "\n")
+                    total_rules += 1
+
+        if total_rules == 0:
+            print("Error: No YARA rules were found. Aborting compilation.")
+            sys.exit(1)
+
     print("Compiling YARA rules...")
-    subprocess.run(["yarac", COMBINED_RULES_FILE, COMPILED_RULES_FILE], check=True, stderr=subprocess.DEVNULL)
-    print("Compilation complete.")
+    try:
+        subprocess.run(["yarac", COMBINED_RULES_FILE, COMPILED_RULES_FILE], check=True, stderr=subprocess.DEVNULL)
+        print("Compilation complete.")
+        print(f"Loaded {total_rules} YARA rules.")
+    except subprocess.CalledProcessError:
+        print("Error: Failed to compile YARA rules.")
+        sys.exit(1)
+
     print(f"Memory Usage After Compiling Rules: {process.memory_info().rss / 1024 ** 2:.2f} MB")
 
 
@@ -159,11 +184,16 @@ def open_log_file(log_file):
 def main():
     parser = argparse.ArgumentParser(description="Scan directories or files using YARA rules.")
     group = parser.add_mutually_exclusive_group()
+    parser.add_argument("-v", "--version", action="store_true", help="Show version")
     group.add_argument("-d", "--directory", type=str, help="Directory to scan")
     group.add_argument("-f", "--file", type=str, nargs='+', help="File(s) to scan")
     parser.add_argument("-e", "--exploratory", action="store_true", help="Include exploratory rules in addition to production")
     parser.add_argument("-s", "--show-strings", action="store_true", help="Show matched strings for each signature")
     args = parser.parse_args()
+
+    if args.version:
+        print(f"Jetpack Local YARA Scanner - v{VERSION}")
+        sys.exit(0)
 
     combine_and_compile_rules()
     rules = yara.load(filepath=COMPILED_RULES_FILE)
