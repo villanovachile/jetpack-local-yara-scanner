@@ -1,8 +1,73 @@
 #!/bin/bash
+# Title: Jetpack Local YARA Scanner Bash Loader
+# Author: Daniel Rodriguez (@villanovachile)
+# Version: 1.01
 
-source ~/bin/scan_env/bin/activate
+SCAN_SCRIPT_URL="https://raw.githubusercontent.com/villanovachile/jetpack-local-yara-scanner/main/scan/scan"
+SCAN_PY_URL="https://raw.githubusercontent.com/villanovachile/jetpack-local-yara-scanner/main/scan/scan.py"
+BIN_DIR=$HOME/bin
+LOCAL_SCAN_SCRIPT="$BIN_DIR/scan"
+LOCAL_SCAN_PY="$BIN_DIR/scan.py"
 
-python3 ~/bin/scan.py "$@"
+if [[ "$1" == "--update" ]]; then
+    UPDATED=0
 
+    if [[ -f "$LOCAL_SCAN_SCRIPT" ]]; then
+        echo "Updating scan script..."
+        curl -fsSL "$SCAN_SCRIPT_URL" -o "$LOCAL_SCAN_SCRIPT" && chmod +x "$LOCAL_SCAN_SCRIPT"
+        UPDATED=1
+    else
+        echo "Error: $LOCAL_SCAN_SCRIPT not found. Cannot update."
+    fi
+
+
+    if [[ -f "$LOCAL_SCAN_PY" ]]; then
+        OLD_YARA_REPO_PATH=$(sed -n "s/.*BASE_DIR = os.path.expanduser('\([^']*\)').*/\1/p" "$LOCAL_SCAN_PY")
+
+        echo "Updating scan.py..."
+        curl -fsSL "$SCAN_PY_URL" -o "$LOCAL_SCAN_PY"
+        UPDATED=1
+
+        if [[ -n "$OLD_YARA_REPO_PATH" ]]; then
+            echo "Preserving existing YARA repo path: $OLD_YARA_REPO_PATH"
+
+            sed -i.bak "s|BASE_DIR = os.path.expanduser('.*')|BASE_DIR = os.path.expanduser('$OLD_YARA_REPO_PATH')|" "$LOCAL_SCAN_PY"
+            echo "Updated BASE_DIR in scan.py"
+        else
+            echo "Warning: Could not extract existing YARA_REPO path from scan.py"
+        fi
+    else
+        echo "Error: $LOCAL_SCAN_PY not found. Cannot update."
+    fi
+
+
+    exit 0
+fi
+
+if [[ "$1" == "--pull" ]]; then
+    LOCAL_SCAN_PY=$HOME/bin/scan.py
+
+    REPO_PATH=$(sed -n "s/.*BASE_DIR = os.path.expanduser('\([^']*\)').*/\1/p" "$LOCAL_SCAN_PY")
+
+    if [[ -z "$REPO_PATH" ]]; then
+        echo "Error: Could not extract BASE_DIR from scan.py"
+        exit 1
+    fi
+
+    REPO_PATH_EXPANDED=${REPO_PATH/#\~/$HOME}
+
+    if [[ -d "$REPO_PATH_EXPANDED/.git" ]]; then
+        echo "Pulling latest signatures from $REPO_PATH_EXPANDED..."
+        git -C "$REPO_PATH_EXPANDED" pull
+    else
+        echo "Error: $REPO_PATH_EXPANDED is not a Git repo."
+        exit 1
+    fi
+
+    exit 0
+fi
+
+
+source $HOME/bin/scan_env/bin/activate
+python3 $HOME/bin/scan.py "$@"
 deactivate
-
