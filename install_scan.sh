@@ -1,4 +1,7 @@
 #!/bin/bash
+# Title: Jetpack Local YARA Scanner Instrall Script
+# Author: Daniel Rodriguez (@villanovachile)
+# Version: 1.01
 
 BIN_DIR="$HOME/bin"
 VENV_DIR="$BIN_DIR/scan_env"
@@ -28,7 +31,8 @@ curl -o "$BIN_DIR/scan.py" "$SCAN_PY_URL"
 echo "Configuring $BIN_DIR/scan.py..."
 if [ -f "$BIN_DIR/scan.py" ]; then
 
-    YARA_REPO=$(find "$HOME" -maxdepth 2 -type d -name "waffle-makers-yara-rules" 2>/dev/null | head -n 1)
+    YARA_REPO=$(find "$HOME" -maxdepth 2 -type d \( -name "waffle-makers-yara-rules" -o -name "jetpack-scan-yara-rules" \) 2>/dev/null | head -n 1)
+
     if [ -n "$YARA_REPO" ]; then
         echo "Found yara repo at: $YARA_REPO"
 
@@ -44,6 +48,7 @@ if [ -f "$BIN_DIR/scan.py" ]; then
         fi
     fi
 
+
     while [ -z "$YARA_REPO" ]; do
         echo "Please enter the full path to your yara repo folder (e.g., ~/repos/waffle-makers-yara-rules):"
         read -r YARA_REPO
@@ -57,7 +62,7 @@ if [ -f "$BIN_DIR/scan.py" ]; then
         fi
     done
 
-    sed -i.bak "s|BASE_DIR = os.path.expanduser('path/to/yara/repo')|BASE_DIR = os.path.expanduser('$YARA_REPO')|" "$BIN_DIR/scan.py"
+    sed -i.bak "s|BASE_DIR = os.path.expanduser('path/to/yara/rules/')|BASE_DIR = os.path.expanduser('$YARA_REPO')|" "$BIN_DIR/scan.py"
 
     echo "$BIN_DIR/scan.py configured successfully."
 else
