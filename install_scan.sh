@@ -80,7 +80,7 @@ fi
 echo "Activating virtual environment and installing dependencies..."
 source "$VENV_DIR/bin/activate"
 pip install --upgrade pip
-pip install yara-python tqdm
+pip install yara-python tqdm psutil
 deactivate
 
 echo "Making scan script executable..."
